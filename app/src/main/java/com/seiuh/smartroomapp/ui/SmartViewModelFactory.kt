@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.seiuh.smartroomapp.data.local.UserPreferences
 import com.seiuh.smartroomapp.data.repository.SmartHomeRepository
+import com.seiuh.smartroomapp.ui.screen.chartdetail.ChartDetailViewModel
 import com.seiuh.smartroomapp.ui.screen.home.HomeViewModel
 import com.seiuh.smartroomapp.ui.screen.light.LightsViewModel
 import com.seiuh.smartroomapp.ui.screen.login.LoginViewModel
@@ -47,6 +48,9 @@ class SmartViewModelFactory(
             }
             modelClass.isAssignableFrom(RoomDetailViewModel::class.java) -> {
                 RoomDetailViewModel(roomId, repository) as T
+            }
+            modelClass.isAssignableFrom(ChartDetailViewModel::class.java) -> {
+                ChartDetailViewModel(roomId, repository) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

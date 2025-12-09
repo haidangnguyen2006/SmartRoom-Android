@@ -19,12 +19,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,6 +41,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -434,6 +441,206 @@ fun SmartModeCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isActive) Color.White.copy(alpha = 0.8f) else TextSecondary
                 )
+            }
+        }
+    }
+}
+@Composable
+fun Circular3DGauge(
+    value: Double,
+    min: Double = 0.0,
+    max: Double = 50.0,
+    unit: String = "°C",
+    modifier: Modifier = Modifier,
+    size: Dp = 200.dp
+) {
+    // Tính toán phần trăm (0.0 -> 1.0)
+    val progress = ((value - min) / (max - min)).coerceIn(0.0, 1.0).toFloat()
+
+    // Màu Gradient cho thanh nhiệt độ (Xanh -> Vàng -> Đỏ)
+    val gaugeGradient = Brush.sweepGradient(
+        colors = listOf(Color(0xFF4FC3F7), Color(0xFFFFD54F), Color(0xFFFF6584)),
+        center = Offset.Unspecified
+    )
+
+    Box(
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        // 1. Nền bóng đổ (Shadow Layer) tạo hiệu ứng nổi
+        Canvas(modifier = Modifier.fillMaxSize().padding(10.dp)) {
+            drawCircle(
+                color = Color.Black.copy(alpha = 0.05f),
+                radius = size.toPx() / 2,
+                center = center + Offset(5f, 5f) // Dịch chuyển để tạo bóng
+            )
+        }
+
+        // 2. Card Tròn nền trắng (Surface)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp) // Padding để chừa chỗ cho shadow
+                .shadow(elevation = 10.dp, shape = CircleShape, spotColor = PrimaryPurple.copy(0.2f))
+                .background(SurfaceWhite, CircleShape)
+        )
+
+        // 3. Vẽ Gauge (Vòng cung)
+        Canvas(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+            val strokeWidth = 20.dp.toPx()
+            val arcSize = size.toPx() - 48.dp.toPx() // Trừ padding
+
+            // Vòng nền (Track)
+            drawArc(
+                color = SurfaceLight,
+                startAngle = 135f,
+                sweepAngle = 270f,
+                useCenter = false,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+
+            // Vòng giá trị (Progress)
+            drawArc(
+                brush = gaugeGradient,
+                startAngle = 135f,
+                sweepAngle = 270f * progress,
+                useCenter = false,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+        }
+
+        // 4. Text Hiển thị
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "${value.toInt()}",
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontSize = 56.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            )
+            Text(
+                text = unit,
+                style = MaterialTheme.typography.titleMedium,
+                color = TextSecondary
+            )
+        }
+    }
+}
+@Composable
+fun DeviceControlCard(
+    name: String,
+    status: String, // Ví dụ: "ON", "OFF", "80%"
+    icon: ImageVector,
+    isOn: Boolean,
+    level: Int? = null, // Mức độ (độ sáng, tốc độ quạt...). Nếu null => Không hiện Slider
+    onToggle: (Boolean) -> Unit,
+    onLevelChange: ((Float) -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    CleanCard(modifier = modifier) {
+        Column {
+            // --- HÀNG 1: HEADER (Icon + Tên + Switch) ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Bên trái: Icon và Tên
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Icon tròn (Đổi màu nền khi Bật/Tắt)
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(if (isOn) PrimaryPurple.copy(alpha = 0.1f) else SurfaceLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = if (isOn) PrimaryPurple else TextSecondary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column {
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = status,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isOn) PrimaryPurple else TextSecondary
+                        )
+                    }
+                }
+
+                // Bên phải: Nút Bật/Tắt
+                Switch(
+                    checked = isOn,
+                    onCheckedChange = onToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = PrimaryPurple,
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = SurfaceLight,
+                        uncheckedBorderColor = Color.Transparent
+                    ),
+                    modifier = Modifier.scale(0.8f)
+                )
+            }
+
+            // --- HÀNG 2: SLIDER (Chỉ hiện khi Đang Bật và có Level) ---
+            if (isOn && level != null && onLevelChange != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Đường kẻ mờ phân cách (Tùy chọn)
+                HorizontalDivider(color = SurfaceLight.copy(alpha = 0.5f), thickness = 1.dp)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Icon nhỏ chỉ thị (ví dụ độ sáng)
+                    Icon(
+                        imageVector = Icons.Default.BrightnessLow,
+                        contentDescription = "Level",
+                        tint = TextSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Thanh trượt
+                    Slider(
+                        value = level.toFloat(),
+                        onValueChange = onLevelChange,
+                        valueRange = 0f..100f, // Giả sử level từ 0 đến 100
+                        colors = SliderDefaults.colors(
+                            thumbColor = PrimaryPurple,
+                            activeTrackColor = PrimaryPurple,
+                            inactiveTrackColor = SurfaceLight
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Số % hiện tại
+                    Text(
+                        text = "$level%",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(36.dp) // Cố định chiều rộng để không bị nhảy layout
+                    )
+                }
             }
         }
     }
