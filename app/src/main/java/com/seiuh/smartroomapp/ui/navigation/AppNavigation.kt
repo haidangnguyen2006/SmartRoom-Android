@@ -68,6 +68,28 @@ fun AppNavigation(
             )
             RoomDetailScreen(navController = navController, viewModel = viewModel)
         }
+        // 5. [MỚI] Chart Screen (Dùng chung cho cả Temp và Power, phân biệt bằng type)
+        // type: "temp" hoặc "power"
+        composable(
+            route = "room/{roomId}/chart/{type}",
+            arguments = listOf(
+                navArgument("roomId") { type = NavType.LongType },
+                navArgument("type") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val roomId = backStackEntry.arguments?.getLong("roomId") ?: 0L
+            val type = backStackEntry.arguments?.getString("type") ?: "temp"
+
+            // ViewModel riêng cho Chart
+            val viewModel: ChartDetailViewModel = viewModel(
+                factory = SmartViewModelFactory(repository, roomId = roomId)
+            )
+
+            // Gọi hàm init dựa trên type
+            LaunchedEffect(type) { viewModel.setType(type) }
+
+            ChartDetailScreen(navController = navController, viewModel = viewModel, chartType = type)
+        }
         // 3. Lights
         composable(
             route = "lights/{roomId}",
