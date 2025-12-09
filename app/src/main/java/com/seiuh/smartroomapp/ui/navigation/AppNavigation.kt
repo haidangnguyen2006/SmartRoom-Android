@@ -3,6 +3,7 @@ package com.seiuh.smartroomapp.ui.navigation
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -22,6 +23,8 @@ import com.seiuh.smartroomapp.ui.screen.roomdetail.RoomDetailScreen
 import com.seiuh.smartroomapp.ui.screen.roomdetail.RoomDetailViewModel
 import com.seiuh.smartroomapp.ui.screen.temperature.TemperatureScreenV2
 import androidx.compose.ui.Modifier
+import com.seiuh.smartroomapp.ui.screen.chartdetail.ChartDetailScreen
+import com.seiuh.smartroomapp.ui.screen.chartdetail.ChartDetailViewModel
 
 @Composable
 fun AppNavigation(
@@ -89,33 +92,6 @@ fun AppNavigation(
             LaunchedEffect(type) { viewModel.setType(type) }
 
             ChartDetailScreen(navController = navController, viewModel = viewModel, chartType = type)
-        }
-        // 3. Lights
-        composable(
-            route = "lights/{roomId}",
-            arguments = listOf(navArgument("roomId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val roomId = backStackEntry.arguments?.getLong("roomId") ?: 0L
-            // Truyền ViewModel đã tạo vào màn hình
-            LightsScreenV2(
-                navController = navController,
-                roomId = roomId,
-            )
-        }
-
-        composable(
-            route = "temperature/{roomId}",
-            arguments = listOf(navArgument("roomId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val roomId = backStackEntry.arguments?.getLong("roomId") ?: 0L
-            TemperatureScreenV2(navController = navController, roomId = roomId)
-        }
-        composable(
-            route = "power/{roomId}",
-            arguments = listOf(navArgument("roomId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val roomId = backStackEntry.arguments?.getLong("roomId") ?: 0L
-            PowerScreenV2(navController = navController, roomId = roomId)
         }
     }
 }
