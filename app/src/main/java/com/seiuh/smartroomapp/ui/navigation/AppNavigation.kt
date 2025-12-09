@@ -37,7 +37,7 @@ fun AppNavigation(
     NavHost(
         navController = navController,
         startDestination = "login" ,
-        modifier = Modifier.padding(paddingValues)
+        //modifier = Modifier.padding(paddingValues)
     ) {
         composable("login") {
             // Khởi tạo ViewModel dùng Factory chung
