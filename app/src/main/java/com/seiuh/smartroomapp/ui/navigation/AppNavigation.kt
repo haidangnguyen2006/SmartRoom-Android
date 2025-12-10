@@ -50,7 +50,7 @@ fun AppNavigation(
         composable("home") {
             // We need a HomeScreen ViewModel
             val viewModel: HomeViewModel = viewModel(factory = SmartViewModelFactory(repository))
-            HomeScreen(navController, viewModel)
+            HomeScreen(navController, viewModel,paddingValues)
         }
         // 3. Các màn hình Placeholder cho Bottom Bar
         composable("equipment") {

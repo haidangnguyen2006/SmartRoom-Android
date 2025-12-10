@@ -63,14 +63,14 @@ fun ChartDetailScreen(
             }
 
             // 2. Chart
-            CleanCard {
-                ReusableMultiLineChart(
-                    title = "Analytics",
-                    chartModel = uiState.chartModel,
-                    isLoading = uiState.isLoading,
-                    modifier = Modifier.fillMaxWidth().height(300.dp)
-                )
-            }
+            ReusableMultiLineChart(
+                title = "Analytics",
+                chartModel = uiState.chartModel,
+                bottomAxisLabels = uiState.chartLabels,
+                xStep = 2,
+                isLoading = uiState.isLoading,
+                modifier = Modifier.fillMaxWidth().height(400.dp)
+            )
 
             // 3. Sensor List (Checkbox)
             Text("Select Sensors", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
