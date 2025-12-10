@@ -59,7 +59,7 @@ fun LoginScreenV3(
         Image(
             // Bạn nhớ thêm ảnh bg_login vào drawable nhé
             // Nếu chưa có ảnh, tạm thời dùng một Box màu đen hoặc gradient
-            painter = painterResource(id = R.drawable.bg_login),
+            painter = painterResource(id = R.drawable.ic_app_login_light_background),
             contentDescription = null,
             contentScale = ContentScale.Crop, // Cắt ảnh để lấp đầy màn hình
             modifier = Modifier.fillMaxSize()
@@ -98,7 +98,7 @@ fun LoginScreenV3(
             // --- LOGO AREA ---
             // Logo Icon
             Image(
-                painter = painterResource(id = R.drawable.ic_app_login_light_background),
+                painter = painterResource(id = R.drawable.ic_app_logo_login_foregound),
                 contentDescription = "Logo",
                 modifier = Modifier.size(80.dp),
                 // Nếu logo là SVG đen, dùng dòng dưới để tô màu Neon. Nếu là PNG màu thì xóa dòng này.
