@@ -67,6 +67,7 @@ fun ChartDetailScreen(
                 ReusableMultiLineChart(
                     title = "Analytics",
                     chartModel = uiState.chartModel,
+                    xStep = 24,
                     isLoading = uiState.isLoading,
                     modifier = Modifier.fillMaxWidth().height(300.dp)
                 )

@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 data class SensorSelection(
     val id: Long,
@@ -36,6 +37,9 @@ class ChartDetailViewModel(
 
     private val _uiState = MutableStateFlow(ChartDetailUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+        .withZone(ZoneId.systemDefault())
 
     fun setType(type: String) {
         _uiState.update { it.copy(chartType = type) }
