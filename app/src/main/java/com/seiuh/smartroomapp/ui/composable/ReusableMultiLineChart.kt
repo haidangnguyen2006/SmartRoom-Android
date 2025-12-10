@@ -28,6 +28,7 @@ import com.patrykandpatrick.vico.core.entry.ChartEntryModel
 import com.patrykandpatrick.vico.views.component.shape.shader.verticalGradient
 import com.seiuh.smartroomapp.ui.theme.*
 import java.util.Locale
+import com.patrykandpatrick.vico.core.chart.DefaultPointConnector
 
 // Bảng màu hiện đại
 val professionalChartColors = listOf(
@@ -39,7 +40,7 @@ val professionalChartColors = listOf(
 )
 
 @Composable
-fun ReusableMultiLineChart(
+fun  ReusableMultiLineChart(
     title: String,
     chartModel: ChartEntryModel?,
     isLoading: Boolean,
@@ -52,13 +53,13 @@ fun ReusableMultiLineChart(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 color = TextPrimary,
-                modifier = Modifier.padding(bottom = 24.dp)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
             Box(
@@ -118,15 +119,18 @@ fun ReusableMultiLineChart(
                         LineChart.LineSpec(
                             lineColor = color.toArgb(),
                             lineThicknessDp = 3f,
-                            // [FIX 3]: Dùng hàm mở rộng verticalGradient của compose package
-                            // Hoặc DynamicShaders.verticalGradient với IntArray
                             lineBackgroundShader = DynamicShaders.verticalGradient(
                                 intArrayOf(
                                     color.copy(alpha = 0.4f).toArgb(),
                                     color.copy(alpha = 0.0f).toArgb()
                                 )
                             ),
-                            lineCap = android.graphics.Paint.Cap.ROUND
+                            lineCap = android.graphics.Paint.Cap.ROUND,
+
+                            //Làm mềm đường vẽ (Curved Line)
+                            pointConnector = DefaultPointConnector(
+                                cubicStrength = 0.2f // Độ cong (0.0 là thẳng, 1.0 là rất cong)
+                            )
                         )
                     }
 

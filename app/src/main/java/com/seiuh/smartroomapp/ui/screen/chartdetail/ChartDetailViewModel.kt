@@ -9,10 +9,12 @@ import com.seiuh.smartroomapp.data.network.NetworkResult
 import com.seiuh.smartroomapp.data.repository.SmartHomeRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 data class SensorSelection(
     val id: Long,
@@ -70,48 +72,114 @@ class ChartDetailViewModel(
             loadChartData()
         }
     }
-
+    private fun <T> aggregateDataByHour(
+        data: List<T>,
+        timestampSelector: (T) -> String,
+        valueSelector: (T) -> Double
+    ): Map<String, Double> {
+        return data.groupBy { item ->
+            // Parse timestamp và làm tròn xuống theo giờ (Truncate to Hour)
+            // Ví dụ: 10:05, 10:55 -> gom chung thành 10:00
+            try {
+                val instant = Instant.parse(timestampSelector(item))
+                val hourInstant = instant.truncatedTo(ChronoUnit.HOURS)
+                hourInstant.toString()
+            } catch (e: Exception) {
+                ""
+            }
+        }.mapValues { entry ->
+            // Tính trung bình cộng của các giá trị trong giờ đó
+            entry.value.map { valueSelector(it) }.average()
+        }.filterKeys { it.isNotEmpty() }
+            // Sắp xếp lại theo thời gian để vẽ đúng thứ tự
+            .toSortedMap()
+    }
     // Tương tự logic loadChartData cũ nhưng áp dụng bộ lọc sensor
     fun loadChartData() {
         viewModelScope.launch {
+            // Logic filter sensor (Hiện tại API trả về All, sau này có thể filter client side hoặc gọi API khác)
             val selectedIds = _uiState.value.sensors.filter { it.isSelected }.map { it.id }
             if (selectedIds.isEmpty()) {
-                _uiState.update { it.copy(chartModel = null, isLoading = false) }
+                _uiState.update { it.copy(chartModel = null, chartLabels = emptyList(), isLoading = false) }
                 return@launch
             }
 
             _uiState.update { it.copy(isLoading = true) }
 
-            // Format Date (UTC)
+            // Chuyển đổi ngày sang Instant (UTC) để gọi API
             val startStr = _uiState.value.startDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toString()
             val endStr = _uiState.value.endDate.atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toString()
 
-            // Gọi API History (Tùy type)
-            // LƯU Ý: API hiện tại getTempHistory trả về AVG của cả phòng,
-            // chưa hỗ trợ filter theo từng ID sensor cụ thể trong params (dựa trên ApiService hiện tại).
-            // Nếu muốn multi-line cho từng sensor, API phải hỗ trợ hoặc client phải gọi loop.
-            // Ở đây tạm thời ta hiển thị biểu đồ tổng quan, logic filter sẽ áp dụng nếu API nâng cấp.
-
             if (_uiState.value.chartType == "temp") {
                 repository.getTempHistory(roomId, startStr, endStr).collect { res ->
-                    // ... Mapping logic (FloatEntry) ...
-                    // Để ngắn gọn, tôi dùng lại logic mapping cũ
                     if (res is NetworkResult.Success) {
-                        val entries = (res.data ?: emptyList()).mapIndexed { index, item ->
-                            FloatEntry(index.toFloat(), item.avgTempC.toFloat())
+                        val rawData = res.data ?: emptyList()
+
+                        // [BƯỚC 1]: GOM NHÓM DỮ LIỆU (1 giờ 1 điểm)
+                        val aggregatedData = aggregateDataByHour(
+                            data = rawData,
+                            timestampSelector = { it.timestamp },
+                            valueSelector = { it.avgTempC }
+                        )
+
+                        // [BƯỚC 2]: Map sang FloatEntry và Labels
+                        val entries = aggregatedData.values.mapIndexed { index, value ->
+                            FloatEntry(index.toFloat(), value.toFloat())
                         }
+
+                        val labels = aggregatedData.keys.map { isoString ->
+                            try {
+                                timeFormatter.format(Instant.parse(isoString))
+                            } catch (e: Exception) { "" }
+                        }.toList()
+
                         val model = if (entries.isNotEmpty()) entryModelOf(entries) else null
-                        _uiState.update { it.copy(chartModel = model, isLoading = false) }
+
+                        _uiState.update {
+                            it.copy(
+                                chartModel = model,
+                                chartLabels = labels,
+                                isLoading = false
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, chartModel = null) }
                     }
                 }
             } else {
                 repository.getPowerHistory(roomId, startStr, endStr).collect { res ->
                     if (res is NetworkResult.Success) {
-                        val entries = (res.data ?: emptyList()).mapIndexed { index, item ->
-                            FloatEntry(index.toFloat(), (item.avgWatt ?: 0.0).toFloat())
+                        val rawData = res.data ?: emptyList()
+
+                        // [BƯỚC 1]: GOM NHÓM DỮ LIỆU (1 giờ 1 điểm)
+                        val aggregatedData = aggregateDataByHour(
+                            data = rawData,
+                            timestampSelector = { it.timestamp },
+                            valueSelector = { it.avgWatt ?:0.0}
+                        )
+
+                        // [BƯỚC 2]: Map sang FloatEntry và Labels
+                        val entries = aggregatedData.values.mapIndexed { index, value ->
+                            FloatEntry(index.toFloat(), value.toFloat())
                         }
+
+                        val labels = aggregatedData.keys.map { isoString ->
+                            try {
+                                timeFormatter.format(Instant.parse(isoString))
+                            } catch (e: Exception) { "" }
+                        }.toList()
+
                         val model = if (entries.isNotEmpty()) entryModelOf(entries) else null
-                        _uiState.update { it.copy(chartModel = model, isLoading = false) }
+
+                        _uiState.update {
+                            it.copy(
+                                chartModel = model,
+                                chartLabels = labels,
+                                isLoading = false
+                            )
+                        }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, chartModel = null) }
                     }
                 }
             }
