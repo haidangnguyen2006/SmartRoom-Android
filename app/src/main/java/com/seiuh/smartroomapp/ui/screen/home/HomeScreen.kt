@@ -31,7 +31,8 @@ import com.seiuh.smartroomapp.ui.theme.*
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    bottomBarPadding: PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -77,7 +78,9 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
-            contentPadding = PaddingValues(bottom = 16.dp) // Thêm padding bottom để không bị che bởi BottomBar
+            contentPadding = PaddingValues(
+                bottom = bottomBarPadding.calculateBottomPadding() + 24.dp // Cộng thêm chút khoảng trống
+            )
         ) {
             // 1. HERO CARD
             item {
