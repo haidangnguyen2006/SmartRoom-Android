@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -36,6 +37,7 @@ import com.seiuh.smartroomapp.R // Đảm bảo import R
 import com.seiuh.smartroomapp.ui.composable.LimeButton
 import com.seiuh.smartroomapp.ui.theme.*
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.input.ImeAction
 
 @Composable
 fun LoginScreenV3(
@@ -131,6 +133,13 @@ fun LoginScreenV3(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
+                NeoTextField(
+                    value = viewModel.serverUrlInput,
+                    onValueChange = { viewModel.onServerUrlChanged(it) },
+                    placeholder = "Server URL (e.g. 192.168.1.5:8080)",
+                    icon = Icons.Default.Link,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
                 // Username
                 NeoTextField(
                     value = uiState.username,

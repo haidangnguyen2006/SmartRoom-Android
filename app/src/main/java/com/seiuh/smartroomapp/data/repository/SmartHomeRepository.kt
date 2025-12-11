@@ -9,6 +9,7 @@ import com.seiuh.smartroomapp.data.model.history.PowerHistory
 import com.seiuh.smartroomapp.data.model.history.TempHistory
 import com.seiuh.smartroomapp.data.model.structure.Floor
 import com.seiuh.smartroomapp.data.model.structure.Room
+import com.seiuh.smartroomapp.data.network.ApiService
 import com.seiuh.smartroomapp.data.network.NetworkResult
 import com.seiuh.smartroomapp.data.network.RetrofitClient
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +17,8 @@ import kotlinx.coroutines.flow.flow
 import retrofit2.Response
 
 class SmartHomeRepository {
-    private val api = RetrofitClient.apiService
+    private val api: ApiService
+        get() = RetrofitClient.apiService
 
     // --- Helper để xử lý Response chung ---
     private fun <T> handleResponse(response: Response<com.seiuh.smartroomapp.data.model.base.ApiResponse<T>>): NetworkResult<T> {

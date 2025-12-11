@@ -19,6 +19,7 @@ class UserPreferences(private val context: Context) {
         val KEY_USERNAME = stringPreferencesKey("username")
         val KEY_PASSWORD = stringPreferencesKey("password")
         val KEY_REMEMBER_ME = booleanPreferencesKey("remember_me")
+        val SERVER_URL = stringPreferencesKey("server_url")
     }
 
     // Lấy thông tin đã lưu
@@ -35,7 +36,15 @@ class UserPreferences(private val context: Context) {
                 null
             }
         }
-
+    // Lấy URL (Mặc định là localhost nếu chưa set)
+    val serverUrl: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[SERVER_URL] ?: "http://192.168.2.29:8080/api/v1/"
+    }
+    suspend fun saveServerUrl(url: String) {
+        context.dataStore.edit { preferences ->
+            preferences[SERVER_URL] = url
+        }
+    }
     // Lưu thông tin
     suspend fun saveCredentials(username: String, pass: String, remember: Boolean) {
         context.dataStore.edit { preferences ->

@@ -1,5 +1,8 @@
 package com.seiuh.smartroomapp.ui.screen.login
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.seiuh.smartroomapp.data.local.UserPreferences
@@ -19,7 +22,8 @@ data class LoginUiState(
     val password: String = "",
     val rememberMe: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val serverUrl: String = ""
 )
 
 sealed class LoginEvent {
@@ -37,6 +41,7 @@ class LoginViewModel(
     private val _loginEvent = MutableSharedFlow<LoginEvent>()
     val loginEvent = _loginEvent.asSharedFlow()
 
+    var serverUrlInput by mutableStateOf("")
     init {
        //Tự động load thông tin đã lưu
         viewModelScope.launch {
@@ -51,12 +56,23 @@ class LoginViewModel(
                     }
                 }
             }
+            userPrefs.serverUrl.collect { savedUrl ->
+                // Loại bỏ http:// và /api/v1/ để hiển thị cho gọn nếu muốn
+                // Hoặc cứ để nguyên chuỗi đầy đủ
+                serverUrlInput = savedUrl
+
+                // Cấu hình Retrofit ngay khi app mở
+                RetrofitClient.configureBaseUrl(savedUrl)
+            }
         }
     }
 
     fun onUsernameChanged(v: String) = _uiState.update { it.copy(username = v, errorMessage = null) }
     fun onPasswordChanged(v: String) = _uiState.update { it.copy(password = v, errorMessage = null) }
     fun onRememberMeChanged(v: Boolean) = _uiState.update { it.copy(rememberMe = v) }
+    fun onServerUrlChanged(newValue: String) {
+        serverUrlInput = newValue
+    }
 
     fun onLoginClicked() {
         if (_uiState.value.username.isBlank() || _uiState.value.password.isBlank()) {
@@ -65,6 +81,8 @@ class LoginViewModel(
         }
 
         viewModelScope.launch {
+            userPrefs.saveServerUrl(serverUrlInput)
+            RetrofitClient.configureBaseUrl(serverUrlInput)
             // Gọi Repository Login
             repository.login(_uiState.value.username, _uiState.value.password).collect { result ->
                 when (result) {
