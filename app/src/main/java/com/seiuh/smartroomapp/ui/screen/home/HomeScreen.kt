@@ -285,17 +285,18 @@ fun FloorSection(
             contentPadding = PaddingValues(bottom = 8.dp, end = 16.dp)
         ) {
             items(rooms) { room ->
+                val safeName = room.name ?: ""
 
                 val randomImage = when {
-                    room.name.contains("Living", ignoreCase = true) || room.name.contains("Khách", ignoreCase = true)
+                    safeName.contains("Living", ignoreCase = true) || room.name.contains("Khách", ignoreCase = true)
                         -> "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?q=80&w=870&auto=format&fit=crop" +
                             "&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 
-                    room.name.contains("Bed", ignoreCase = true) || room.name.contains("Ngủ", ignoreCase = true)
+                    safeName.contains("Bed", ignoreCase = true) || room.name.contains("Ngủ", ignoreCase = true)
                         -> "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=580&auto=format&fit=crop" +
                             "&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 
-                    room.name.contains("Kitchen", ignoreCase = true) || room.name.contains("Bếp", ignoreCase = true)
+                    safeName.contains("Kitchen", ignoreCase = true) || room.name.contains("Bếp", ignoreCase = true)
                         -> "https://images.unsplash.com/photo-1556910096-6f5e72db6803?q=80&w=870&auto=format&fit=crop" +
                             "&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 
@@ -305,7 +306,7 @@ fun FloorSection(
                 // -----------------------------
 
                 RoomCard(
-                    roomName = room.name,
+                    roomName = safeName.ifEmpty { "Unknown Room" },
                     deviceCount = 4, // Số liệu giả lập
                     isOn = true,     // Trạng thái giả lập
                     imageUrl = randomImage, // [Truyền ảnh vào đây]

@@ -57,13 +57,24 @@ class ChartDetailViewModel(
             if (_uiState.value.chartType == "temp") {
                 repository.getTempSensors(roomId).collect { res ->
                     if (res is NetworkResult.Success) {
-                        sensorsList.addAll((res.data ?: emptyList()).map { SensorSelection(it.id, it.name) })
+                        // [FIX]: Xử lý Null Safety cho name
+                        val data = res.data ?: emptyList()
+                        // Xóa dữ liệu cũ (nếu có) trước khi thêm mới để tránh duplicate
+                        sensorsList.clear()
+                        sensorsList.addAll(data.map {
+                            SensorSelection(it.id, it.name ?: "Sensor ${it.id}")
+                        })
                     }
                 }
             } else {
                 repository.getPowerSensors(roomId).collect { res ->
                     if (res is NetworkResult.Success) {
-                        sensorsList.addAll((res.data ?: emptyList()).map { SensorSelection(it.id, it.name) })
+                        // [FIX]: Tương tự cho Power Sensor
+                        val data = res.data ?: emptyList()
+                        sensorsList.clear()
+                        sensorsList.addAll(data.map {
+                            SensorSelection(it.id, it.name ?: "Sensor ${it.id}")
+                        })
                     }
                 }
             }

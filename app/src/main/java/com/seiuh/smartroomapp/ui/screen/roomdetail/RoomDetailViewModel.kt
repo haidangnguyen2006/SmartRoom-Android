@@ -44,7 +44,11 @@ class RoomDetailViewModel(
                 if (res is NetworkResult.Success) {
                     val sensors = res.data ?: emptyList()
                     if (sensors.isNotEmpty()) {
-                        temp = sensors.mapNotNull { it.currentValue }.average()
+                        val calculatedAvg = sensors.mapNotNull { s -> s.currentValue }.average()
+                        // [FIX]: Kiểm tra NaN (Not a Number)
+                        if (!calculatedAvg.isNaN()) {
+                            temp = calculatedAvg
+                        }
                     }
                 }
             }
